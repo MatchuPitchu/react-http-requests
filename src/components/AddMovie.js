@@ -1,13 +1,13 @@
 import { useRef } from 'react';
 import classes from './AddMovie.module.css';
 
-const AddMovie = props => {
+const AddMovie = ({ onAddMovie }) => {
   const titleRef = useRef('');
   const openingTextRef = useRef('');
   const releaseDateRef = useRef('');
 
-  function submitHandler(event) {
-    event.preventDefault();
+  const submitHandler = e => {
+    e.preventDefault();
 
     // could add validation here...
 
@@ -17,8 +17,8 @@ const AddMovie = props => {
       releaseDate: releaseDateRef.current.value,
     };
 
-    props.onAddMovie(movie);
-  }
+    onAddMovie(movie);
+  };
 
   return (
     <form onSubmit={submitHandler}>

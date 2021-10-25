@@ -22,7 +22,10 @@ const App = () => {
     // with Fetch API use 'ok' property
     try {
       // fetch returns a promise;
-      const res = await fetch('https://swapi.dev/api/films/');
+      // 'movies.json' -> have to add .json when using firebase; database was disabled after test
+      const res = await fetch(
+        'https://react-http-ba0a9-default-rtdb.europe-west1.firebasedatabase.app/movies.json'
+      );
       // if error status code is received then throw error and stop execution of try block
       if (!res.ok) {
         throw new Error('Something went wrong');
@@ -31,16 +34,31 @@ const App = () => {
       // translate json obj to real JS obj with json method and
       // return transformed data to next then();
       const data = await res.json();
+
+      // transform firebase data (which is bunch of objects in an obj) into an array
+      const loadedMovies = [];
+      // loop through all keys in data obj (every key contains one movie obj)
+      for (const key in data) {
+        loadedMovies.push({
+          id: key,
+          title: data[key].title,
+          openingText: data[key].openingText,
+          releaseDate: data[key].releaseDate,
+        });
+      }
+
+      // first approach with Star Wars API https://swapi.dev/
       // transform received data obj with map() into my wished format
-      const transformedMovies = data.results.map(movie => {
-        return {
-          id: movie.episode_id,
-          title: movie.title,
-          openingText: movie.opening_crawl,
-          releaseDate: movie.release_date,
-        };
-      });
-      setMovies(transformedMovies);
+      // const transformedMovies = data.results.map(movie => {
+      //   return {
+      //     id: movie.episode_id,
+      //     title: movie.title,
+      //     openingText: movie.opening_crawl,
+      //     releaseDate: movie.release_date,
+      //   };
+      // });
+
+      setMovies(loadedMovies);
     } catch (e) {
       // message is string passed inside Error above
       setError(e.message);
@@ -54,9 +72,29 @@ const App = () => {
     fetchMoviesHandler();
   }, [fetchMoviesHandler]);
 
-  function addMovieHandler(movie) {
-    console.log(movie);
-  }
+  const addMovieHandler = async movie => {
+    setLoading(true);
+    setError(null);
+
+    const options = {
+      method: 'POST',
+      body: JSON.stringify(movie), // body data has to be in json format
+      headers: { 'Content-Type': 'application/json' },
+    };
+
+    try {
+      const res = await fetch(
+        'https://react-http-ba0a9-default-rtdb.europe-west1.firebasedatabase.app/movies.json',
+        options
+      );
+      const data = await res.json();
+      console.log(data);
+      fetchMoviesHandler(); // automatically fetch new movies
+    } catch (e) {
+      setError(e.message);
+    }
+    setLoading(false);
+  };
 
   // conditional content definition;
   // better than conditions in JSX
